@@ -1,0 +1,5 @@
+ujson==1.35
+flask==1.0.2
+requests==2.21.0
+redis==3.0.1
+gunicorn==19.9.0
