@@ -13,7 +13,7 @@ def run_experiment(store_ids):
         response = requests.get('http://localhost:8000/treatment/{}'.format(store_id))
         try:
             data = response.json()
-            results[store_id] = data['treatment']
+            results[store_id] = data['group_assignment']
         except Exception as e:
             print(f'Error: {e}')
             print(f'Response: {response.text}')
@@ -37,19 +37,19 @@ def main():
         total_time = end_time - start_time
         requests_per_second = (s_count + 1) / total_time.total_seconds()
 
-        model_a_count = 0
-        model_b_count = 0
+        control_count = 0
+        variation_count = 0
         for k, v in api_result.items():
-            if v == "model_a":
-                model_a_count += 1
-            elif v == "model_b":
-                model_b_count += 1
+            if v == "control":
+                control_count += 1
+            elif v == "variation":
+                variation_count += 1
 
         result = {
             'experiment_number': idx + 1,
             'store_count': s_count,
-            'model_a_count': model_a_count,
-            'model_b_count': model_b_count,
+            'control_count': control_count,
+            'variation_count': variation_count,
             'start_time': start_time,
             'end_time': end_time,
             'total_time': total_time,
@@ -61,8 +61,8 @@ def main():
     experiment_end = datetime.now()
 
     # Report the stats of the experiments
-    cols = ['experiment_number', 'store_count', 'model_a_count', 'model_b_count', 'start_time', 'end_time', 'total_time',
-            'requests_per_second', ]
+    cols = ['experiment_number', 'store_count', 'control_count', 'variation_count', 'start_time', 'end_time',
+            'total_time', 'requests_per_second', ]
     experiment_df = pd.DataFrame(all_results, columns=cols)
 
     min_reqs_per_sec = experiment_df['requests_per_second'].min()

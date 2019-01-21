@@ -3,7 +3,7 @@
 import falcon
 from falcon import testing
 import pytest
-from api.ab_endpoint import api
+from group_assignments.api import api
 
 
 @pytest.fixture

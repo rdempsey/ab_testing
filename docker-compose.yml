@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+
+  agent_consumer:
+    build: .
+    volumes:
+      - .:/code
+      - ./logs/gg:/var/log/gg
+    env_file:
+      - configs/agent_consumer.env
+    environment:
+      - AGENT_TYPE=consumer
+    restart: always
+    depends_on:
+      - redis
+      - kafka
+    command: ["python", "agent/agent_consumer.py"]
+
+  agent_producer:
+    build: .
+    volumes:
+      - .:/code
+      - ./logs/gg:/var/log/gg
+    env_file:
+      - configs/agent_producer.env
+    environment:
+      - AGENT_TYPE=producer
+      - NODE_FUNCTION_CONFIG_FILE=configs/node_function_config.yml
+    restart: always
+    depends_on:
+      - redis
+      - kafka
+    command: ["python", "agent/agent_producer.py"]
+
+  dashboard:
+    build: .
+    volumes:
+      - .:/code
+      - ./logs/gg:/var/log/gg
+    env_file:
+    - configs/dashboard.env
+    restart: always
+    depends_on:
+      - redis
+      - kafka
+    command: ["python", "dashboard/dashboard.py"]
+
+  redis:
+    image: redis:5.0.1
+    restart: always
+    ports:
+      - "6379:6379"
+
+  kafka:
+    image: wurstmeister/kafka
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs/kafka:/var/log/kafka
+    restart: always
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_LOG_DIRS: /var/log/kafka
+      KAFKA_BROKER_ID: 1
+      HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "gg.agent:1:1"
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
