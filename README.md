@@ -74,3 +74,9 @@ All benchmarks were run on my Mac (2.2 GHz Intel Core i7, 16 GB 1600 MHz DDR3) u
 |Workers|Threads|Simultaneous Users|Hatch Rate|Run Time|Max Reqs/Sec|JSON Lib|
 |-------|-------|------------------|----------|--------|------------|--------|
 |9      |2      |5000              |50        |2.5 min |330.1       |ujson   |
+
+### The Full Monty in Docker Single Flask API
+
+|Workers|Threads|Simultaneous Users|Hatch Rate|Run Time|Max Reqs/Sec|JSON Lib|
+|-------|-------|------------------|----------|--------|------------|--------|
+|9      |2      |4670              |50        |2.5 min |341         |ujson   |
