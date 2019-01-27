@@ -1,0 +1,5 @@
+ujson==1.35
+flask==1.0.2
+gunicorn==19.9.0
+sqlalchemy==1.2.16
+pymysql>=0.9.3

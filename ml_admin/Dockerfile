@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN rm requirements.txt
 
 # Run the container
-CMD ["locust", "-H", "http://api:5000", "-f", "locustfile.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:5001", "admin:app", "--workers 9", "--threads 2"]

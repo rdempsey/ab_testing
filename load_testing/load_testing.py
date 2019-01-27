@@ -60,7 +60,7 @@ def main():
 
     experiment_end = datetime.now()
 
-    # Report the stats of the experiments
+    # Report the stats of the ml_admin
     cols = ['experiment_number', 'store_count', 'control_count', 'variation_count', 'start_time', 'end_time',
             'total_time', 'requests_per_second', ]
     experiment_df = pd.DataFrame(all_results, columns=cols)

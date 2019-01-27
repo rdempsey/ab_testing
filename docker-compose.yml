@@ -3,18 +3,33 @@ version: '3'
 services:
 
   api:
-    container_name: api
+    container_name: ml_api
     build:
-      context: ./api
+      context: ml_api
     volumes:
       - .:/code
-      - ./logs/api:/var/log/api
+      - ./logs/ml_api:/var/log/ml_api
     env_file:
-      - ./api/api.env
+      - ml_api/api.env
     ports:
       - 5000:5000
     depends_on:
       - redis
+    restart: always
+
+  admin:
+    container_name: ml_admin
+    build:
+      context: ml_admin
+    volumes:
+      - .:/code
+      - ./logs/ml_admin:/var/log/ml_admin
+    env_file:
+      - ml_admin/admin.env
+    ports:
+      - 5001:5001
+    depends_on:
+      - mysql
     restart: always
 
   load_testing:
@@ -34,9 +49,22 @@ services:
 
   redis:
     container_name: redis
-    image: redis:5.0.1
+    image: redis:5.0.3
     ports:
       - 6379:6379
+    restart: always
+
+  mysql:
+    container_name: mysql
+    image: mysql/mysql-server:latest
+    volumes:
+      - ./mysql/my.cnf:/etc/my.cnf
+    environment:
+      MYSQL_ROOT_PASSWORD: 'd4j]RRoHa(gK6Tea'
+      MYSQL_USER: 'abtesting'
+      MYSQL_PASS: '7Kmt1fjufan?2ibc'
+    ports:
+      - 3307:3306
     restart: always
 
   elasticsearch:
@@ -44,15 +72,6 @@ services:
     image: elasticsearch:6.5.4
     ports:
       - 9200:9200
-    restart: always
-
-  cerebro:
-    container_name: cerebro
-    image: yannart/cerebro:latest
-    ports:
-      - 9000:9000
-    depends_on:
-      - elasticsearch
     restart: always
   
   logstash:
@@ -62,7 +81,7 @@ services:
     volumes:
       - ./logstash/ml-logstash.conf:/etc/logstash/conf.d/logstash.conf
       - ./logstash/logs-template.json:/etc/logstash/templates/logs-template.json
-      - ./logs/api:/var/log/api
+      - ./logs/ml_api:/var/log/ml_api
     depends_on:
       - elasticsearch
     restart: always
@@ -74,6 +93,15 @@ services:
       - 5601:5601
     environment:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    restart: always
+
+  cerebro:
+    container_name: cerebro
+    image: yannart/cerebro:latest
+    ports:
+      - 9000:9000
     depends_on:
       - elasticsearch
     restart: always

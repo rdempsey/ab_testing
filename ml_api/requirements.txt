@@ -3,3 +3,4 @@ flask==1.0.2
 redis==3.0.1
 gunicorn==19.9.0
 json-logging==0.0.10
+tenacity==5.0.2

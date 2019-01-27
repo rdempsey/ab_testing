@@ -62,11 +62,13 @@ def _create_log(message, api_response):
 
 def _check_cache(hash_key):
     """Check the Redis cache for the store number and return if found."""
+    # TODO: add tenacity
     return client.get(hash_key)
 
 
 def _add_to_cache(hash_key, group_assignment):
     """Add a store and group_assignment to the cache."""
+    # TODO: add tenacity
     client.set(hash_key, group_assignment)
 
 
@@ -92,7 +94,7 @@ def _get_group_assignment(hash_key, model_name):
 def serve_dsim_prediction(store_number, upc_code):
     model_name = "dsim"
 
-    key_to_hash = f"{store_number}_{upc_code}".encode('utf-8')
+    key_to_hash = f"{store_number}".encode('utf-8')
     hash_key = sha1(key_to_hash).hexdigest()
     group_assignment = _check_cache(hash_key)
 
