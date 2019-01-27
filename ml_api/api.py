@@ -7,6 +7,7 @@ from flask import Flask
 import ujson
 import redis
 from hashlib import sha1
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 app = Flask(__name__)
 
@@ -63,16 +64,37 @@ def _create_log(message, api_response):
                 }})
 
 
+def log_retry_redis(func, retry_num):
+    """If a retry to Redis occurs, log it."""
+    global logger
+    if logger is not None:
+        logger.info("ml_api_retry_redis",
+                    extra={'props': {
+                        'retry_num': retry_num
+                    }})
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, max=10),
+    stop=stop_after_attempt(3),
+    reraise=True,
+    retry=retry_if_exception_type(redis.ConnectionError),
+    after=log_retry_redis
+)
 def _check_cache(hash_key):
     """Check the Redis cache for the store number and return if found."""
-    # TODO: add tenacity
-
     return client.get(hash_key)
 
 
+@retry(
+    wait=wait_exponential(multiplier=1, max=10),
+    stop=stop_after_attempt(3),
+    reraise=True,
+    retry=retry_if_exception_type(redis.ConnectionError),
+    after=log_retry_redis
+)
 def _add_to_cache(hash_key, group_assignment):
     """Add a store and group_assignment to the cache."""
-    # TODO: add tenacity
     client.set(hash_key, group_assignment)
 
 
@@ -114,7 +136,7 @@ def serve_model_prediction(store_number, upc_code):
         'hash_key': hash_key
     }
 
-    _create_log("DSIM model served", response)
+    _create_log("ml_api_model_prediction_served", response)
 
     return ujson.dumps(response)
 
