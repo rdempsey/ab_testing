@@ -29,9 +29,9 @@ json_logging.ENABLE_JSON_LOGGING = True
 json_logging.init(framework_name='flask')
 json_logging.init_request_instrument(app)
 
-logger = logging.getLogger("experiments_api_logger")
+logger = logging.getLogger(name=getenv('LOGGER_NAME', 'ml_admin_logger'))
 logger.setLevel(_get_log_level())
-logger.addHandler(logging.FileHandler(filename=getenv('LOG_FILE', 'ml_admin.log')))
+logger.addHandler(logging.FileHandler(filename=getenv('LOG_FILE', '/var/log/ml_admin/ml_admin.log')))
 
 # MySQL
 

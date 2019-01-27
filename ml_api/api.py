@@ -31,9 +31,9 @@ json_logging.ENABLE_JSON_LOGGING = True
 json_logging.init(framework_name='flask')
 json_logging.init_request_instrument(app)
 
-logger = logging.getLogger("ml_api_logger")
+logger = logging.getLogger(name=getenv('LOGGER_NAME', 'ml_api_logger'))
 logger.setLevel(_get_log_level())
-logger.addHandler(logging.FileHandler(filename=getenv('LOG_FILE', 'api.log')))
+logger.addHandler(logging.FileHandler(filename=getenv('LOG_FILE', '/var/log/ml_api/ml_api.log')))
 
 # Redis
 redis_host = getenv('REDIS_HOST', 'localhost')
@@ -46,6 +46,9 @@ client = redis.Redis(host=redis_host,
                      charset="utf-8",
                      decode_responses=True,
                      retry_on_timeout=True)
+
+# Model Name for the main route
+model_name = getenv("MODEL_NAME").lower()
 
 
 def _create_log(message, api_response):
@@ -63,6 +66,7 @@ def _create_log(message, api_response):
 def _check_cache(hash_key):
     """Check the Redis cache for the store number and return if found."""
     # TODO: add tenacity
+
     return client.get(hash_key)
 
 
@@ -90,10 +94,8 @@ def _get_group_assignment(hash_key, model_name):
     return group_assignment
 
 
-@app.route("/dsim/<int:store_number>/<int:upc_code>")
-def serve_dsim_prediction(store_number, upc_code):
-    model_name = "dsim"
-
+@app.route(f"/{model_name}/<int:store_number>/<int:upc_code>")
+def serve_model_prediction(store_number, upc_code):
     key_to_hash = f"{store_number}".encode('utf-8')
     hash_key = sha1(key_to_hash).hexdigest()
     group_assignment = _check_cache(hash_key)
@@ -101,6 +103,8 @@ def serve_dsim_prediction(store_number, upc_code):
     if group_assignment is None:
         group_assignment = _get_group_assignment(hash_key, model_name)
         _add_to_cache(store_number, group_assignment)
+
+    # TODO: Add ML action here
 
     response = {
         'model_name': model_name,
