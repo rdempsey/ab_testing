@@ -3,7 +3,7 @@
 from os import getenv
 import json_logging
 import logging
-from flask import Flask
+from flask import Flask, request
 import ujson
 import redis
 from hashlib import sha1
@@ -52,16 +52,9 @@ client = redis.Redis(host=redis_host,
 model_name = getenv("MODEL_NAME").lower()
 
 
-def _create_log(message, api_response):
+def _create_log(message, log_extras):
     """Create a log in json format."""
-    logger.info(message,
-                extra={'props': {
-                    'model_name': f"{api_response['model_name']}",
-                    'store_number': f"{api_response['store_number']}",
-                    'upc_code': f"{api_response['upc_code']}",
-                    'group_assignment': f"{api_response['group_assignment']}",
-                    'hash_key': f"{api_response['hash_key']}"
-                }})
+    logger.info(message, extra={'props': log_extras})
 
 
 def log_retry_redis(func, retry_num):
@@ -127,16 +120,28 @@ def serve_model_prediction(store_number, upc_code):
         _add_to_cache(store_number, group_assignment)
 
     # TODO: Add ML action here
+    prediction = None
 
     response = {
         'model_name': model_name,
         'store_number': store_number,
         'upc_code': upc_code,
         'group_assignment': group_assignment,
-        'hash_key': hash_key
+        'prediction': prediction
     }
 
-    _create_log("ml_api_model_prediction_served", response)
+    log_extras = {
+        'model_name': model_name,
+        'store_number': store_number,
+        'upc_code': upc_code,
+        'group_assignment': group_assignment,
+        'hash_key': hash_key,
+        'prediction': prediction,
+        'request_url': request.url,
+        'request_referrer': request.referrer
+    }
+
+    _create_log("ml_api_model_prediction_served", log_extras)
 
     return ujson.dumps(response)
 

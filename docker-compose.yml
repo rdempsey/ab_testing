@@ -17,20 +17,20 @@ services:
       - redis
     restart: always
 
-  admin:
-    container_name: ml_admin
-    build:
-      context: ml_admin
-    volumes:
-      - .:/code
-      - ./logs/ml_admin:/var/log/ml_admin
-    env_file:
-      - ml_admin/admin.env
-    ports:
-      - 5001:5001
-    depends_on:
-      - mysql
-    restart: always
+#  admin:
+#    container_name: ml_admin
+#    build:
+#      context: ml_admin
+#    volumes:
+#      - .:/code
+#      - ./logs/ml_admin:/var/log/ml_admin
+#    env_file:
+#      - ml_admin/admin.env
+#    ports:
+#      - 5001:5001
+#    depends_on:
+#      - mysql
+#    restart: always
 
   load_testing:
     container_name: lt
