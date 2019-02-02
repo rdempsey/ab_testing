@@ -81,6 +81,7 @@ services:
     volumes:
       - ./logstash/ml-logstash.conf:/etc/logstash/conf.d/logstash.conf
       - ./logstash/logs-template.json:/etc/logstash/templates/logs-template.json
+      - ./logstash/metrics-template.json:/etc/logstash/templates/metrics-template.json
       - ./logs/ml_api:/var/log/ml_api
     depends_on:
       - elasticsearch

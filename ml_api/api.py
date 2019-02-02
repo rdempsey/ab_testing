@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+api.py
+
+API to serve machine learning model predictions.
+"""
+
 from os import getenv
 import json_logging
 import logging
@@ -8,8 +14,19 @@ import ujson
 import redis
 from hashlib import sha1
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
+from time import time
+from model import Model
+from helpers.middleware import setup_metrics
+
 
 app = Flask(__name__)
+setup_metrics(app)
+
+
+# Model
+model_name = getenv("MODEL_NAME", "MODEL").lower()
+model_file = getenv("MODEL_FILE_NAME", "model.joblib")
+model = Model(model_file)
 
 
 # Logging
@@ -34,7 +51,8 @@ json_logging.init_request_instrument(app)
 
 logger = logging.getLogger(name=getenv('LOGGER_NAME', 'ml_api_logger'))
 logger.setLevel(_get_log_level())
-logger.addHandler(logging.FileHandler(filename=getenv('LOG_FILE', '/var/log/ml_api/ml_api.log')))
+logger.addHandler(logging.FileHandler(filename=getenv('LOG_FILE', '../logs/ml_api/api.log')))
+
 
 # Redis
 redis_host = getenv('REDIS_HOST', 'localhost')
@@ -48,9 +66,6 @@ client = redis.Redis(host=redis_host,
                      decode_responses=True,
                      retry_on_timeout=True)
 
-# Model Name for the main route
-model_name = getenv("MODEL_NAME").lower()
-
 
 def _create_log(message, log_extras):
     """Create a log in json format."""
@@ -61,7 +76,7 @@ def log_retry_redis(func, retry_num):
     """If a retry to Redis occurs, log it."""
     global logger
     if logger is not None:
-        logger.info("ml_api_retry_redis",
+        logger.info("ml_api.retry_redis",
                     extra={'props': {
                         'retry_num': retry_num
                     }})
@@ -100,48 +115,56 @@ def _deterministic_random_choice(hash_key, test_name, num_variations):
     return hash(str(hash_key) + test_name) % num_variations
 
 
-def _get_group_assignment(hash_key, model_name):
+def _get_group_assignment(hash_key, ml_model_name):
     """Get the group assignment."""
-    if _deterministic_random_choice(hash_key, model_name, 2) == 0:
+    if _deterministic_random_choice(hash_key, ml_model_name, 2) == 0:
         group_assignment = "control"
     else:
         group_assignment = "variation"
     return group_assignment
 
 
-@app.route(f"/{model_name}/<int:store_number>/<int:upc_code>")
-def serve_model_prediction(store_number, upc_code):
-    key_to_hash = f"{store_number}".encode('utf-8')
+@app.route(f"/{model_name}/predict/<int:uid>")
+def serve_model_prediction(uid):
+
+    key_to_hash = f"{uid}".encode('utf-8')
     hash_key = sha1(key_to_hash).hexdigest()
     group_assignment = _check_cache(hash_key)
 
     if group_assignment is None:
         group_assignment = _get_group_assignment(hash_key, model_name)
-        _add_to_cache(store_number, group_assignment)
+        _add_to_cache(uid, group_assignment)
 
-    # TODO: Add ML action here
-    prediction = None
+    # Add ML action here
+    model_start = time()
+    features = list()
+    # prediction = model.predict(features)
+    prediction = "0.40"
+    model_end = time()
 
     response = {
         'model_name': model_name,
-        'store_number': store_number,
-        'upc_code': upc_code,
+        'uid': uid,
         'group_assignment': group_assignment,
         'prediction': prediction
     }
 
     log_extras = {
-        'model_name': model_name,
-        'store_number': store_number,
-        'upc_code': upc_code,
+        'session_id': request.cookies['sessionid'],
+        'endpoint': request.endpoint,
+        'path': request.path,
+        'url': request.url,
+        'referrer': request.referrer,
+        'uid': uid,
         'group_assignment': group_assignment,
         'hash_key': hash_key,
         'prediction': prediction,
-        'request_url': request.url,
-        'request_referrer': request.referrer
+        'model_name': model_name,
+        'model_metadata': model.meta_data(),
+        'model_request_duration': model_end - model_start
     }
 
-    _create_log("ml_api_model_prediction_served", log_extras)
+    _create_log("ml_api.model_prediction_served", log_extras)
 
     return ujson.dumps(response)
 
