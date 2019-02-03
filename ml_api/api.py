@@ -177,8 +177,9 @@ def serve_model_prediction(uid):
         'prediction': prediction
     }
 
+    print("\nRequest: {}\n".format(request))
+
     log_extras = {
-        'xsrf': request.cookies['_xsrf'],
         'endpoint': request.endpoint,
         'path': request.path,
         'url': request.url,
