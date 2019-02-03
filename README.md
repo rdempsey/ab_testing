@@ -1,8 +1,15 @@
 # A/B Testing
 
-This repo is a proof-of-concept for developing, testing and load testing an A/B testing API.
+This repo is a fully-featured proof-of-concept for creating an API endpoint for a machine learning model.
 
-## Overview
+## Features
+
+* A/B testing (control/variation)
+* Load testing
+* Caching of group assignments
+* API and model metrics with visualization
+
+## Introduction to A/B Testing
 
 A/B testing, also known as split testing, is used to compare two versions of something to see which performs better. Typically used for testing two versions of landing or sales pages, we can use it to test different versions of machine learning (ML) models, or compare the results of an ML model to the current state of affairs.
 
@@ -33,10 +40,14 @@ To help ensure we can achieve statistical significance in an experiment we:
 
 ## What's In The Box?
 
-* [Falcon](https://falconframework.org/#): a bare-metal Python web API framework for building very fast app backends and microservices.
 * [Flask](http://flask.pocoo.org/): a microframework for Python based on Werkzeug, Jinja 2 and good intentions.
 * [Gunicorn](https://gunicorn.org/): a Python WSGI HTTP Server for UNIX. All of the APIs run using gunicorn.
 * [Locust](https://locust.io/): an open source load testing tool.
+* [Redis](https://redis.io): for caching
+* [Elasticsearch](https://www.elastic.co/products/elasticsearch): logs and metric storage
+* [Logstash](https://www.elastic.co/products/logstash): transfers logs into Elasticsearch
+* [Kibana](https://www.elastic.co/products/kibana): log and metric visualization
+* [MySQL](https://www.mysql.com/): storing non-log data
 
 The entire stack is run in [Docker](https://www.docker.com/) containers.
 
@@ -46,37 +57,11 @@ The entire stack is run in [Docker](https://www.docker.com/) containers.
 2. Open your browser and go to the Locust UI at http://127.0.0.1:8089
 3. Run your load tests.
 
-## Internal Benchmarks
+## Usage for Real Life
 
-All benchmarks were run on my Mac (2.2 GHz Intel Core i7, 16 GB 1600 MHz DDR3) using Locust.
+1. Create a machine learning model with [scikit-learn](https://scikit-learn.org/stable/index.html) and save it to disk using [joblib](https://pypi.org/project/joblib/).
+2. Update the `api.env` file in `ml_api/api.env` with the path to the model.
+3. Add code to retrieve the features your model needs.
+4. Launch the API.
 
-### Group Assignments Only
-
-|Workers|Threads|Simultaneous Users|Hatch Rate|Run Time|Max Reqs/Sec|
-|-------|-------|------------------|----------|--------|------------|
-|10     |2      |300               |10        |5 min   |292.2       |
-|10     |2      |300               |10        |5 min   |292.7       |
-|10     |4      |300               |10        |5 min   |294.5       |
-|12     |2      |300               |10        |5 min   |291.1       |
-|9      |4      |300               |10        |5 min   |292.5       |
-|10     |4      |300               |10        |5 min   |292         |
-
-
-### Flask API w/ Redis Cache + Group Assignments (No Docker)
-
-|Workers|Threads|Simultaneous Users|Hatch Rate|Run Time|Max Reqs/Sec|JSON Lib|
-|-------|-------|------------------|----------|--------|------------|--------|
-|9      |2      |5000              |50        |5 min   |477.1       |flask   |
-|9      |2      |5000              |50        |2.5 min |526.1       |ujson   |
-
-### The Full Monty in Docker
-
-|Workers|Threads|Simultaneous Users|Hatch Rate|Run Time|Max Reqs/Sec|JSON Lib|
-|-------|-------|------------------|----------|--------|------------|--------|
-|9      |2      |5000              |50        |2.5 min |330.1       |ujson   |
-
-### The Full Monty in Docker Single Flask API
-
-|Workers|Threads|Simultaneous Users|Hatch Rate|Run Time|Max Reqs/Sec|JSON Lib|
-|-------|-------|------------------|----------|--------|------------|--------|
-|9      |2      |4670              |50        |2.5 min |341         |ujson   |
+If using a different model library, you can update the project to load pickled models instead.

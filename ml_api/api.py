@@ -126,7 +126,12 @@ def _get_group_assignment(hash_key, ml_model_name):
 
 @app.route(f"/{model_name}/predict/<int:uid>")
 def serve_model_prediction(uid):
+    """
+    Model endpoint.
 
+    :param uid: unique identifier to use for group assignment.
+    :return: response: json containing the group assignment, model prediction and more.
+    """
     key_to_hash = f"{uid}".encode('utf-8')
     hash_key = sha1(key_to_hash).hexdigest()
     group_assignment = _check_cache(hash_key)
@@ -135,9 +140,9 @@ def serve_model_prediction(uid):
         group_assignment = _get_group_assignment(hash_key, model_name)
         _add_to_cache(uid, group_assignment)
 
-    # Add ML action here
+    # Update the code below to retrieve the features your model needs and remove the hard coded prediction
     model_start = time()
-    features = list()
+    # features = list()
     # prediction = model.predict(features)
     prediction = "0.40"
     model_end = time()
