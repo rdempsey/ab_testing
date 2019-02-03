@@ -124,6 +124,29 @@ def _get_group_assignment(hash_key, ml_model_name):
     return group_assignment
 
 
+@app.route('/health')
+def health_check():
+    """
+    Health check endpoint.
+
+    :return: 200 if the API is alive.
+    """
+    return ujson.dumps({"status": 200}), 200
+
+
+@app.route('/ready')
+def readiness_check():
+    """
+    Return the readiness of the model.
+
+    :return: 200 if the model is ready, else 503
+    """
+    if model.is_ready():
+        return ujson.dumps({"status": 200}), 200
+    else:
+        return ujson.dumps({"status": 503}), 503
+
+
 @app.route(f"/{model_name}/predict/<int:uid>")
 def serve_model_prediction(uid):
     """
@@ -155,7 +178,7 @@ def serve_model_prediction(uid):
     }
 
     log_extras = {
-        'session_id': request.cookies['sessionid'],
+        'xsrf': request.cookies['_xsrf'],
         'endpoint': request.endpoint,
         'path': request.path,
         'url': request.url,

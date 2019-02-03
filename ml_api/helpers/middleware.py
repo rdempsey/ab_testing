@@ -34,10 +34,11 @@ def stop_timer(response):
     resp_time = (time.time() - request.start_time)*1000
     utc_now = datetime.utcnow()
     log_data = {
-        'type': 'metric',
+        'type': 'log',
         'written_at': iso_time_format(utc_now),
         'written_ts': epoch_nano_second(utc_now),
         'msg': 'ml_api.metric.response_time',
+        'xsrf': request.cookies['_xsrf'],
         'session_id': request.cookies['sessionid'],
         'endpoint': request.endpoint,
         'response_time': str(resp_time)
