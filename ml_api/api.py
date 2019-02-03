@@ -147,10 +147,10 @@ def readiness_check():
         return ujson.dumps({"status": 503}), 503
 
 
-@app.route(f"/{model_name}/predict/<int:uid>")
+@app.route(f"/{model_name}/predict/<string:uid>")
 def serve_model_prediction(uid):
     """
-    Model endpoint.
+    Prediction endpoint.
 
     :param uid: unique identifier to use for group assignment.
     :return: response: json containing the group assignment, model prediction and more.
@@ -167,7 +167,7 @@ def serve_model_prediction(uid):
     model_start = time()
     # features = list()
     # prediction = model.predict(features)
-    prediction = "0.40"
+    prediction = 0.40
     model_end = time()
 
     response = {
@@ -176,8 +176,6 @@ def serve_model_prediction(uid):
         'group_assignment': group_assignment,
         'prediction': prediction
     }
-
-    print("\nRequest: {}\n".format(request))
 
     log_extras = {
         'endpoint': request.endpoint,
@@ -195,7 +193,7 @@ def serve_model_prediction(uid):
 
     _create_log("ml_api.model_prediction_served", log_extras)
 
-    return ujson.dumps(response)
+    return ujson.dumps(response), 200
 
 
 if __name__ == "__main__":

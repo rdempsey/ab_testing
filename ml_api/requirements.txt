@@ -6,3 +6,4 @@ json-logging==0.0.10
 tenacity==5.0.2
 joblib==0.13.1
 numpy==1.16.0
+pytest==4.2.0
