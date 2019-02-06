@@ -39,8 +39,6 @@ services:
     volumes:
       - .:/code
       - ./logs/lt:/var/log
-    env_file:
-      - ./load_testing/load_testing.env
     ports:
       - 8089:8089
     depends_on:

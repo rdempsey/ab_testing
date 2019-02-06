@@ -15,7 +15,7 @@ import redis
 from hashlib import sha1
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from time import time
-from model import Model
+from models.model import Model
 from helpers.middleware import setup_metrics
 
 
