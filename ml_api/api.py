@@ -76,7 +76,7 @@ def log_retry_redis(func, retry_num):
     """If a retry to Redis occurs, log it."""
     global logger
     if logger is not None:
-        logger.info("ml_api.retry_redis",
+        logger.info("ml_api.retry.redis",
                     extra={'props': {
                         'retry_num': retry_num
                     }})
@@ -191,7 +191,7 @@ def serve_model_prediction(uid):
         'model_request_duration': model_end - model_start
     }
 
-    _create_log("ml_api.model_prediction_served", log_extras)
+    _create_log("ml_api.model.prediction_served", log_extras)
 
     return ujson.dumps(response), 200
 
